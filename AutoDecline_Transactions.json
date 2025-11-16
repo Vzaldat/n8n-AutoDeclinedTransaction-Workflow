@@ -1,0 +1,414 @@
+{
+  "name": "AutoDecline_Transactions",
+  "nodes": [
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.0-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.0-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a fintech risk engine. Given transaction: {{ $json.merchant }} (merchant) + {{ $json.mcc }} (txn mcc code) and {{$json.Amount}} (txn amount), return ONLY valid JSON: {   \"risk_score\": 0-100,   \"tags\": [\"fraud_likely\" | \"policy_violation\" | \"high_risk_merchant\"],   \"explanation\": \"<50 words>\" }"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -2272,
+        464
+      ],
+      "id": "652e2454-7a9e-437d-8c2f-17bccba17011",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "c37o1iEwEjjVhqcL",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "clashHandling": {
+            "values": {
+              "resolveClash": "addSuffix"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1920,
+        464
+      ],
+      "id": "f7cd954b-fd2a-4fae-8182-19f808c412b1",
+      "name": "Merge",
+      "alwaysOutputData": true,
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "7b3ce2a5-3904-4283-ab85-dfe7afe10a64",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": "={\n  \"userId\": 1,  // ← Fake customer ID\n  \"id\": 1,      // ← Txn ID\n  \"title\": \"sunt aut facere repellat provident occaecati excepturi optio reprehenderit\",  // ← Merchant name (sim)\n  \"body\": \"quia et suscipit\\nsuscipit recusandae consequuntur expedita et cum\\nreprehenderit molestiae ut ut quas totam\\nnostrum rerum est autem sunt rem eveniet architecto\"  // ← Description (sim MCC or details)\n}"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2496,
+        896
+      ],
+      "id": "1e84988d-4ac9-4a8f-b411-9c1a123040c2",
+      "name": "Webhook",
+      "webhookId": "7b3ce2a5-3904-4283-ab85-dfe7afe10a64"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Elp789TqcBZ4eLgiU_xude5ULUGW7ANdoaOdk2SH_9g",
+          "mode": "list",
+          "cachedResultName": "Declined_Transaction",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Elp789TqcBZ4eLgiU_xude5ULUGW7ANdoaOdk2SH_9g/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1958176326,
+          "mode": "list",
+          "cachedResultName": "Declined_Transaction_Details",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Elp789TqcBZ4eLgiU_xude5ULUGW7ANdoaOdk2SH_9g/edit#gid=1958176326"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Transaction_ID": "={{ $json.txn_id }}",
+            "Amount": "={{ $json.Amount }}",
+            "MCC": "={{ $json.mcc }}",
+            "Merchant": "={{ $json.merchant }}",
+            "Risk_score_1": "={{ $json.content_1.parts[0].text.parseJson()['risk_score'] }}",
+            "tags_1": "={{ $json.content_1.parts[0].text.parseJson()['tags'].first()}}",
+            "Explanation_1": "={{ $json.content_1.parts[0].text.parseJson()['explanation'] }}",
+            "Explanation_2": "={{ $json.content_2.parts[0].text.parseJson()['explanation'] }}",
+            "Tags_2": "={{ $json.content_2.parts[0].text.parseJson()['tags'].first()}}",
+            "Risk_score_2": "={{ $json.content_2.parts[0].text.parseJson()['risk_score'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Transaction_ID",
+              "displayName": "Transaction_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Amount",
+              "displayName": "Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "MCC",
+              "displayName": "MCC",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Merchant",
+              "displayName": "Merchant",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Risk_score_1",
+              "displayName": "Risk_score_1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tags_1",
+              "displayName": "tags_1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Explanation_1",
+              "displayName": "Explanation_1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Risk_score_2",
+              "displayName": "Risk_score_2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tags_2",
+              "displayName": "Tags_2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Explanation_2",
+              "displayName": "Explanation_2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "useAppend": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1472,
+        544
+      ],
+      "id": "7309c827-65f8-4982-8566-5e55f99fabcc",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gir7uzWycvqSP5ap",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "5645ff03-040a-44de-b531-a7929dc826d9",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2720,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const randomTxnId = Math.floor(Math.random() * 100000);\nconst randomMerchant = `Merchant${Math.floor(Math.random() * 1000)}`;\nconst randomAmount = Math.floor(Math.random() * 10000);\nconst randomMcc = `MCC${Math.floor(1000 + Math.random() * 9000)}`;\n\nconst result = {\n  txn_id: randomTxnId,\n  merchant: randomMerchant,\n  Amount: randomAmount,\n  mcc: randomMcc,\n};\n\nreturn [{ json: result }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2496,
+        608
+      ],
+      "id": "4c84c1fc-cc78-4406-b606-654c02361499",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a fintech risk engine. Given transaction: {{ $json.merchant }} (merchant) + {{ $json.mcc }} (txn mcc code) and {{$json.Amount}} (txn amount), return ONLY valid JSON: {   \"risk_score\": 0-100,   \"tags\": [\"fraud_likely\" | \"policy_violation\" | \"high_risk_merchant\"],   \"explanation\": \"<50 words>\" }"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -2272,
+        752
+      ],
+      "id": "b8d1fd08-8dbe-40eb-9139-0b5bfc8703ef",
+      "name": "Message a model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "c37o1iEwEjjVhqcL",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1696,
+        544
+      ],
+      "id": "8f66ca83-b5c6-447b-a950-bbfa75fd727c",
+      "name": "Merge1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ef0b8d38-3719-4eb9-8674-528077b0ea8a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "05c45cfffb9c917c65aaa115795a929cb2221361bbe7804fe41da386981f8eca"
+  },
+  "id": "CWmFe3Iwyeyfqv92",
+  "tags": []
+}
